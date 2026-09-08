@@ -1,0 +1,5 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Calendar">
+<path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M7.2 3C7.64183 3 8 3.36631 8 3.81818V4.63636H16V3.81818C16 3.36631 16.3582 3 16.8 3C17.2418 3 17.6 3.36631 17.6 3.81818V4.63636H18.4C19.28 4.63636 20 5.37273 20 6.27273V19.3636C20 20.2636 19.28 21 18.4 21H5.6C4.72 21 4 20.2636 4 19.3636V6.27273C4 5.37273 4.72 4.63636 5.6 4.63636H6.4V3.81818C6.4 3.36631 6.75817 3 7.2 3ZM18.4 19.3636H5.6V10.3636H18.4V19.3636ZM18.4 8.72727H5.6V6.27273H18.4V8.72727Z" fill="#838799"/>
+</g>
+</svg>

@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String
+  firstName    String
+  lastName     String
+  phone        String   @default("")
+  companyName  String   @default("")
+  createdAt    DateTime @default(now())
+
+  properties     Property[]
+  requests       ServiceRequest[]
+  comments       Comment[]
+  activities     ActivityEvent[]
+  quotes         Quote[]
+  invoices       Invoice[]
+  contractors    Contractor[]
+  tenants        Tenant[]
+  contacts       Contact[]
+  inventory      InventoryItem[]
+  feedback       Feedback[]
+  blogs          BlogPost[]
+}
+
+model Property {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  type      String
+  address   String
+  postTown  String
+  postCode  String
+  createdAt DateTime @default(now())
+
+  spaces    PropertySpace[]
+  requests  ServiceRequest[]
+  tenants   Tenant[]
+  inventory InventoryItem[]
+}
+
+model PropertySpace {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id])
+  name       String
+  note       String   @default("")
+}
+
+model ServiceRequest {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  ownerId       String
+  owner         User     @relation(fields: [ownerId], references: [id])
+  propertyId    String?
+  property      Property? @relation(fields: [propertyId], references: [id])
+  title         String
+  type          String
+  description   String   @default("")
+  address       String
+  postTown      String
+  postCode      String
+  status        String
+  priority      String
+  quoteAmount   Float?
+  quoteAccepted Boolean  @default(false)
+  quoteRejected Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  images     RequestImage[]
+  comments   Comment[]
+  activities ActivityEvent[]
+  quotes     Quote[]
+}
+
+model RequestImage {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id])
+  url       String
+}
+
+model Comment {
+  id        String         @id @default(cuid())
+  requestId String
+  request   ServiceRequest @relation(fields: [requestId], references: [id])
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  body      String
+  createdAt DateTime       @default(now())
+}
+
+model ActivityEvent {
+  id        String         @id @default(cuid())
+  requestId String?
+  request   ServiceRequest? @relation(fields: [requestId], references: [id])
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  message   String
+  createdAt DateTime       @default(now())
+}
+
+model Quote {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  requestId   String?
+  request     ServiceRequest? @relation(fields: [requestId], references: [id])
+  name        String
+  status      String
+  companyName String   @default("")
+  companyEmail String  @default("")
+  clientName  String   @default("")
+  clientEmail String   @default("")
+  notes       String   @default("")
+  color       String   @default("#0076b7")
+  subtotal    Float    @default(0)
+  discount    Float    @default(0)
+  vat         Float    @default(0)
+  total       Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  lines QuoteLine[]
+}
+
+model QuoteLine {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float
+  unitPrice   Float
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  quoteId     String?
+  name        String
+  status      String
+  companyName String   @default("")
+  clientName  String   @default("")
+  notes       String   @default("")
+  total       Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  lines InvoiceLine[]
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Float
+  unitPrice   Float
+}
+
+model Contractor {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  name      String
+  company   String   @default("")
+  email     String   @default("")
+  phone     String   @default("")
+  trade     String   @default("")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Tenant {
+  id         String    @id @default(cuid())
+  ownerId    String
+  owner      User      @relation(fields: [ownerId], references: [id])
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  name       String
+  email      String    @default("")
+  phone      String    @default("")
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  name      String
+  email     String   @default("")
+  phone     String   @default("")
+  company   String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model InventoryItem {
+  id         String    @id @default(cuid())
+  ownerId    String
+  owner      User      @relation(fields: [ownerId], references: [id])
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+  name       String
+  category   String    @default("")
+  createdAt  DateTime  @default(now())
+}
+
+model ServiceCategory {
+  id     String  @id @default(cuid())
+  name   String
+  active Boolean @default(true)
+}
+
+model SubscriptionPlan {
+  id    String @id @default(cuid())
+  name  String
+  count Int    @default(0)
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  mood      String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model AccountUser {
+  id        String   @id @default(cuid())
+  ownerId   String
+  name      String
+  email     String
+  roleName  String
+  createdAt DateTime @default(now())
+}
