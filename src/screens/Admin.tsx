@@ -79,6 +79,7 @@ export function Categories() {
   const [menu, setMenu] = useState(false)
   const [items, setItems] = useState<{ id: string; name: string }[]>([])
   const [name, setName] = useState('')
+  const [editing, setEditing] = useState<string | null>(null)
   function load() {
     void api<{ categories: { id: string; name: string }[] }>('/admin/categories').then((res) =>
       setItems(res.categories),
@@ -92,7 +93,21 @@ export function Categories() {
         <div className="list">
           {items.map((item) => (
             <div className="card" key={item.id}>
-              <h3>{item.name}</h3>
+              {editing === item.id ? (
+                <div className="field">
+                  <input className="control" value={name} onChange={(e) => setName(e.target.value)} />
+                  <button className="btn primary" type="button" onClick={() => void api(`/admin/categories/${item.id}`, { method: 'PATCH', body: JSON.stringify({ name }) }).then(() => { flash('Service updated'); setEditing(null); setName(''); load() })}>
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <h3>{item.name}</h3>
+                  <button className="btn outline" type="button" onClick={() => { setEditing(item.id); setName(item.name) }}>
+                    Edit service
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>

@@ -926,6 +926,25 @@ app.post('/admin/categories', async (req, reply) => {
   }
 })
 
+app.patch('/admin/categories/:id', async (req, reply) => {
+  try {
+    const user = await auth(req)
+    if (user.role !== 'admin') return reply.code(403).send({ error: 'Forbidden' })
+    const { id } = req.params as { id: string }
+    const body = req.body as { name?: string; active?: boolean }
+    const category = await prisma.serviceCategory.update({
+      where: { id },
+      data: {
+        name: body.name?.trim() || undefined,
+        active: body.active,
+      },
+    })
+    return { category }
+  } catch {
+    return reply.code(400).send({ error: 'Unable to update service category' })
+  }
+})
+
 app.get('/admin/subscriptions', async (req, reply) => {
   try {
     await auth(req)
