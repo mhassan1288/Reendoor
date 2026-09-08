@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: rendoor-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci && npm run prisma:generate && npm run prisma:push
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_SECRET
+        sync: false
