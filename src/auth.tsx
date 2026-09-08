@@ -7,6 +7,7 @@ type AuthState = {
   user: User | null
   ready: boolean
   login: (email: string, password: string) => Promise<User>
+  updateUser: (input: Pick<User, 'firstName' | 'lastName' | 'phone' | 'companyName'>) => Promise<User>
   logout: () => void
 }
 
@@ -46,7 +47,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
-  const value = useMemo(() => ({ user, ready, login, logout }), [login, logout, ready, user])
+  const updateUser = useCallback(async (input: Pick<User, 'firstName' | 'lastName' | 'phone' | 'companyName'>) => {
+    const res = await api<{ user: User }>('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+    setUser(res.user)
+    return res.user
+  }, [])
+
+  const value = useMemo(() => ({ user, ready, login, logout, updateUser }), [login, logout, ready, updateUser, user])
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
 
@@ -65,4 +75,3 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 export { homeFor, roleLabel } from './roles'
-

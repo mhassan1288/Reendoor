@@ -11,9 +11,11 @@ import { images } from '../icons'
 import { useApp } from '../context'
 
 export function Profile() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const { toast, flash } = useApp()
   const [menu, setMenu] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '', companyName: '' })
   if (!user) return null
 
   return (
@@ -30,7 +32,19 @@ export function Profile() {
               <p className="role">{roleLabel(user.role)}</p>
             </div>
           </div>
-          <div className="pinfo">
+          {editing ? (
+            <div className="form">
+              {(['firstName', 'lastName', 'phone', 'companyName'] as const).map((field) => (
+                <div className="field" key={field}>
+                  <label>{field === 'companyName' ? 'Company name' : field}</label>
+                  <input className="control" value={form[field]} onChange={(e) => setForm((current) => ({ ...current, [field]: e.target.value }))} />
+                </div>
+              ))}
+              <button className="btn primary" type="button" onClick={() => void updateUser(form).then(() => { flash('Profile updated'); setEditing(false) })}>
+                Save profile
+              </button>
+            </div>
+          ) : <div className="pinfo">
             <p>
               <span>First Name</span>
               <b>{user.firstName}</b>
@@ -47,10 +61,10 @@ export function Profile() {
               <span>Phone Number</span>
               <b>{user.phone || '—'}</b>
             </p>
-          </div>
+          </div>}
         </div>
       </div>
-      <button className="fab outline" type="button" aria-label="Edit" onClick={() => flash('Profile updated')}>
+      <button className="fab outline" type="button" aria-label="Edit" onClick={() => { setForm({ firstName: user.firstName, lastName: user.lastName, phone: user.phone, companyName: user.companyName }); setEditing(true) }}>
         <Icon name="edit" />
       </button>
       <BottomNav active="profile" />

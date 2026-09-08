@@ -4,6 +4,7 @@ import fastifyStatic from '@fastify/static'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { mkdirSync } from 'node:fs'
+import { createHash, randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Fastify, { type FastifyRequest } from 'fastify'
@@ -166,11 +167,88 @@ app.post('/auth/login', async (req, reply) => {
   return { token, user: publicUser(user) }
 })
 
+app.post('/auth/forgot-password', async (req, reply) => {
+  const body = req.body as { email?: string }
+  const email = body.email?.trim().toLowerCase()
+  if (!email) return reply.code(400).send({ error: 'Email is required' })
+
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) return { message: 'If an account exists, a reset email has been sent.' }
+  if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM || !process.env.APP_URL) {
+    return reply.code(503).send({ error: 'Password reset email service is not configured' })
+  }
+
+  const rawToken = randomBytes(32).toString('hex')
+  const tokenHash = createHash('sha256').update(rawToken).digest('hex')
+  await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } })
+  await prisma.passwordResetToken.create({
+    data: { tokenHash, userId: user.id, expiresAt: new Date(Date.now() + 60 * 60 * 1000) },
+  })
+
+  const resetUrl = `${process.env.APP_URL.replace(/\/$/, '')}/reset-password?token=${rawToken}`
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: process.env.MAIL_FROM,
+      to: [user.email],
+      subject: 'Reset your Rendoor password',
+      html: `<p>Hello ${user.firstName},</p><p>Use the link below to reset your Rendoor password. It expires in one hour.</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+    }),
+  })
+  if (!response.ok) {
+    const detail = await response.text()
+    req.log.error({ status: response.status, detail }, 'Password reset email failed')
+    return reply.code(502).send({ error: 'Unable to send password reset email' })
+  }
+  return { message: 'If an account exists, a reset email has been sent.' }
+})
+
+app.post('/auth/reset-password', async (req, reply) => {
+  const body = req.body as { token?: string; password?: string }
+  if (!body.token || !body.password || body.password.length < 8) {
+    return reply.code(400).send({ error: 'A token and password of at least 8 characters are required' })
+  }
+  const tokenHash = createHash('sha256').update(body.token).digest('hex')
+  const reset = await prisma.passwordResetToken.findUnique({ where: { tokenHash } })
+  if (!reset || reset.expiresAt <= new Date()) {
+    return reply.code(400).send({ error: 'This reset link is invalid or expired' })
+  }
+  const passwordHash = await bcrypt.hash(body.password, 10)
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: reset.userId }, data: { passwordHash } }),
+    prisma.passwordResetToken.delete({ where: { id: reset.id } }),
+  ])
+  return { message: 'Password updated successfully' }
+})
+
 app.get('/auth/me', async (req, reply) => {
   try {
     const token = await auth(req)
     const user = await prisma.user.findUnique({ where: { id: token.id } })
     if (!user) return reply.code(401).send({ error: 'Unauthorized' })
+    return { user: publicUser(user) }
+  } catch {
+    return reply.code(401).send({ error: 'Unauthorized' })
+  }
+})
+
+app.patch('/auth/profile', async (req, reply) => {
+  try {
+    const token = await auth(req)
+    const body = req.body as { firstName?: string; lastName?: string; phone?: string; companyName?: string }
+    const user = await prisma.user.update({
+      where: { id: token.id },
+      data: {
+        firstName: body.firstName?.trim() || undefined,
+        lastName: body.lastName?.trim() || undefined,
+        phone: body.phone?.trim() || undefined,
+        companyName: body.companyName?.trim() || undefined,
+      },
+    })
     return { user: publicUser(user) }
   } catch {
     return reply.code(401).send({ error: 'Unauthorized' })

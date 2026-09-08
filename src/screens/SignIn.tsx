@@ -78,7 +78,7 @@ export function SignIn() {
             }
           />
         </Field>
-        <button className="link" type="button">
+        <button className="link" type="button" onClick={() => navigate('/reset-password')}>
           Forgot Password?
         </button>
         <p className="date" style={{ marginTop: 16 }}>

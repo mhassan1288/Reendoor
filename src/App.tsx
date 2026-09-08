@@ -12,6 +12,7 @@ import { Feedback, Profile } from './screens/Profile'
 import { Queues } from './screens/Queues'
 import { CreateQuote, Quotations, ViewQuote } from './screens/Quotes'
 import { SignIn } from './screens/SignIn'
+import { ResetPassword } from './screens/ResetPassword'
 import { Splash } from './screens/Splash'
 import { ViewRequest } from './screens/ViewRequest'
 
@@ -36,6 +37,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={<AuthedLayout />}>
               <Route path="/queues" element={<Queues />} />
               <Route path="/requests/new" element={<CreateRequest />} />

@@ -40,6 +40,15 @@ export function Reports() {
   useEffect(() => {
     void api<{ reports: typeof reports }>('/reports').then((res) => setReports(res.reports))
   }, [])
+  function downloadReport() {
+    const csv = ['Report,Rows', ...reports.map((item) => `"${item.name.replaceAll('"', '""')}",${item.rows}`)].join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'rendoor-report.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
   return (
     <section className="screen">
       <Header title="Reports" onMenu={() => setMenu(true)} />
@@ -53,7 +62,7 @@ export function Reports() {
           ))}
         </div>
         <div className="form">
-          <button className="btn outline" type="button">
+          <button className="btn outline" type="button" onClick={downloadReport}>
             Download Report
           </button>
         </div>
