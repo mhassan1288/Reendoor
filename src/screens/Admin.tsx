@@ -40,14 +40,24 @@ export function Reports() {
   useEffect(() => {
     void api<{ reports: typeof reports }>('/reports').then((res) => setReports(res.reports))
   }, [])
-  function downloadReport() {
+  async function downloadReport() {
     const csv = ['Report,Rows', ...reports.map((item) => `"${item.name.replaceAll('"', '""')}",${item.rows}`)].join('\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    const file = new File([csv], 'rendoor-report.csv', { type: 'text/csv' })
+    if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ title: 'Rendoor report', files: [file] })
+      return
+    }
+    const url = URL.createObjectURL(file)
     const link = document.createElement('a')
     link.href = url
     link.download = 'rendoor-report.csv'
+    link.style.display = 'none'
+    document.body.appendChild(link)
     link.click()
-    URL.revokeObjectURL(url)
+    window.setTimeout(() => {
+      link.remove()
+      URL.revokeObjectURL(url)
+    }, 1000)
   }
   return (
     <section className="screen">
@@ -62,7 +72,7 @@ export function Reports() {
           ))}
         </div>
         <div className="form">
-          <button className="btn outline" type="button" onClick={downloadReport}>
+          <button className="btn outline" type="button" onClick={() => void downloadReport()}>
             Download Report
           </button>
         </div>
