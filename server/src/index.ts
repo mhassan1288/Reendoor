@@ -299,6 +299,7 @@ app.post('/requests', async (req, reply) => {
       address: string
       postTown: string
       postCode: string
+      imageUrls?: string[]
     }
     const count = await prisma.serviceRequest.count()
     const created = await prisma.serviceRequest.create({
@@ -313,6 +314,7 @@ app.post('/requests', async (req, reply) => {
         postTown: body.postTown,
         postCode: body.postCode,
         status: 'Open',
+        images: body.imageUrls?.length ? { create: body.imageUrls.map((url) => ({ url })) } : undefined,
       },
       include: { images: true },
     })

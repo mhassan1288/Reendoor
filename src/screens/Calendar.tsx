@@ -5,7 +5,7 @@ import { BottomNav } from '../components/BottomNav'
 import { ServiceRequestCard } from '../components/Cards'
 import { Header } from '../components/Header'
 import { Icon } from '../components/Chrome'
-import { Drawer } from '../components/Overlays'
+import { Drawer, FilterSheet } from '../components/Overlays'
 import { useApp } from '../context'
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -18,6 +18,10 @@ export function CalendarScreen() {
   const [selected, setSelected] = useState(18)
   const [menu, setMenu] = useState(false)
   const [query, setQuery] = useState('')
+  const [filters, setFilters] = useState(false)
+  const [status, setStatus] = useState('')
+  const [priority, setPriority] = useState('')
+  const [applied, setApplied] = useState({ status: '', priority: '' })
 
   const visible = useMemo(
     () =>
@@ -29,6 +33,7 @@ export function CalendarScreen() {
       ),
     [query, requests],
   )
+  const filtered = visible.filter((item) => (!applied.status || item.status === applied.status) && (!applied.priority || item.priority === applied.priority))
 
   return (
     <section className="screen">
@@ -43,7 +48,7 @@ export function CalendarScreen() {
               placeholder="Search here"
             />
           </label>
-          <button className="filter-btn" type="button" aria-label="Filter">
+          <button className="filter-btn" type="button" aria-label="Filter" onClick={() => setFilters(true)}>
             <Icon name="filter" />
           </button>
         </div>
@@ -71,7 +76,7 @@ export function CalendarScreen() {
           </div>
         </div>
         <div className="list">
-          {visible.map((item) => (
+          {filtered.map((item) => (
             <ServiceRequestCard
               key={item.id}
               request={item}
@@ -85,6 +90,24 @@ export function CalendarScreen() {
       </button>
       <BottomNav active="calendar" />
       <Drawer open={menu} onClose={() => setMenu(false)} onLogout={logout} />
+      <FilterSheet
+        open={filters}
+        onClose={() => setFilters(false)}
+        status={status}
+        priority={priority}
+        onStatus={setStatus}
+        onPriority={setPriority}
+        onClear={() => {
+          setStatus('')
+          setPriority('')
+          setApplied({ status: '', priority: '' })
+          setFilters(false)
+        }}
+        onApply={() => {
+          setApplied({ status, priority })
+          setFilters(false)
+        }}
+      />
     </section>
   )
 }

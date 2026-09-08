@@ -16,6 +16,7 @@ type AppState = {
     address: string
     postTown: string
     postCode: string
+    imageUrls?: string[]
   }) => Promise<void>
   acceptQuote: (id: string) => Promise<void>
   rejectQuote: (id: string) => Promise<void>
@@ -64,6 +65,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       address: string
       postTown: string
       postCode: string
+      imageUrls?: string[]
     }) => {
       await api('/requests', { method: 'POST', body: JSON.stringify(input) })
       await refresh()

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { BottomNav } from '../components/BottomNav'
@@ -8,6 +8,8 @@ import { Drawer } from '../components/Overlays'
 import { emptyPropertyCopy } from '../data'
 import { images } from '../icons'
 import { useApp } from '../context'
+import { api } from '../api/client'
+import type { PropertyRecord } from '../types'
 
 export function Properties() {
   const navigate = useNavigate()
@@ -147,7 +149,12 @@ export function AddProperty() {
 export function ViewProperty() {
   const { id } = useParams()
   const { properties } = useApp()
-  const property = properties.find((item) => item.id === id) || properties[0]
+  const [loaded, setLoaded] = useState<PropertyRecord | null>(null)
+  useEffect(() => {
+    if (!id) return
+    void api<{ property: PropertyRecord }>(`/properties/${id}`).then((res) => setLoaded(res.property))
+  }, [id])
+  const property = loaded || properties.find((item) => item.id === id) || properties[0]
   if (!property) {
     return (
       <section className="screen">

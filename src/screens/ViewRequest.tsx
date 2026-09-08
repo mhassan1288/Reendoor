@@ -114,15 +114,11 @@ export function ViewRequest() {
                 <dt>Images:</dt>
                 <dd>
                   <div className="thumbs">
-                    <span className="thumb">
-                      <img src={images.leak1} alt="" />
-                    </span>
-                    <span className="thumb">
-                      <img src={images.leak2} alt="" />
-                    </span>
-                    <span className="thumb">
-                      <img src={images.leak3} alt="" />
-                    </span>
+                    {(request.images?.length ? request.images : [images.leak1, images.leak2, images.leak3]).map((url) => (
+                      <span className="thumb" key={url}>
+                        <img src={url} alt="" />
+                      </span>
+                    ))}
                   </div>
                 </dd>
                 <dt>Priority:</dt>

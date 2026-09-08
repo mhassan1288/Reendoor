@@ -15,6 +15,7 @@ export function CreateRequest() {
   const [priority, setPriority] = useState('')
   const [location, setLocation] = useState<'mine' | 'other'>('mine')
   const [hasImage, setHasImage] = useState(false)
+  const [imageUrl, setImageUrl] = useState('')
   const [busy, setBusy] = useState(false)
 
   const ready = Boolean(type && summary && priority && hasImage) && !busy
@@ -45,6 +46,7 @@ export function CreateRequest() {
         address: loc.line,
         postTown: loc.town,
         postCode: loc.code,
+        imageUrls: imageUrl ? [imageUrl] : [],
       })
       navigate('/queues')
     } finally {
@@ -85,10 +87,25 @@ export function CreateRequest() {
               />
             </Field>
             <Field label="Add images" required>
-              <button className="add-image" type="button" onClick={() => setHasImage(true)}>
+              <label className="add-image">
                 <Icon name="camera" />
                 Add
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (!file) return
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                      setImageUrl(typeof reader.result === 'string' ? reader.result : '')
+                      setHasImage(true)
+                    }
+                    reader.readAsDataURL(file)
+                  }}
+                />
+              </label>
               {hasImage ? <p className="date" style={{ marginTop: 8 }}>1 image attached</p> : null}
             </Field>
             <Field label="Service priority" required>
