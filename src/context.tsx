@@ -53,8 +53,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [user])
 
   useEffect(() => {
-    void refresh().catch(() => undefined)
-  }, [refresh])
+    void refresh().catch(() => flash('Unable to load your data. Please try again.'))
+  }, [flash, refresh])
 
   const addRequest = useCallback(
     async (input: {

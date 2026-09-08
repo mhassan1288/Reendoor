@@ -20,7 +20,7 @@ function formatDate(d: Date) {
 
 function formatCreated(d: Date) {
   const time = d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
-  return `${formatDate(d)}, 3d, ${time}`
+  return `${formatDate(d)}, ${time}`
 }
 
 function publicUser(user: {

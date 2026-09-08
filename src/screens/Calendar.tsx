@@ -8,14 +8,22 @@ import { Icon } from '../components/Chrome'
 import { Drawer, FilterSheet } from '../components/Overlays'
 import { useApp } from '../context'
 
-const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const dates = [16, 17, 18, 19, 20, 21, 22]
-
 export function CalendarScreen() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { requests } = useApp()
-  const [selected, setSelected] = useState(18)
+  const week = useMemo(() => {
+    const today = new Date()
+    const monday = new Date(today)
+    const day = monday.getDay()
+    monday.setDate(monday.getDate() + (day === 0 ? -6 : 1 - day))
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(monday)
+      date.setDate(monday.getDate() + index)
+      return date
+    })
+  }, [])
+  const [selected, setSelected] = useState(() => new Date().toISOString().slice(0, 10))
   const [menu, setMenu] = useState(false)
   const [query, setQuery] = useState('')
   const [filters, setFilters] = useState(false)
@@ -54,26 +62,29 @@ export function CalendarScreen() {
         </div>
         <div className="week">
           <div className="month">
-            February 2026
+          {week[0].toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
             <Icon name="chevronDown" size={16} />
           </div>
           <div className="days">
-            {days.map((day) => (
-              <span key={day}>{day}</span>
+          {week.map((date) => (
+            <span key={date.toISOString()}>{date.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
             ))}
           </div>
           <div className="dates">
-            {dates.map((day) => (
-              <button
-                key={day}
-                type="button"
-                className={`date-btn${selected === day ? ' active' : ''}`}
-                onClick={() => setSelected(day)}
-              >
-                {day}
-              </button>
-            ))}
-          </div>
+          {week.map((date) => {
+            const value = date.toISOString().slice(0, 10)
+            return (
+            <button
+              key={value}
+              type="button"
+              className={`date-btn${selected === value ? ' active' : ''}`}
+              onClick={() => setSelected(value)}
+            >
+              {date.getDate()}
+            </button>
+            )
+          })}
+        </div>
         </div>
         <div className="list">
           {filtered.map((item) => (
